@@ -37,13 +37,14 @@ import dev.onvoid.webrtc.media.video.VideoDevice;
 import dev.onvoid.webrtc.media.video.VideoDeviceSource;
 import org.java_websocket.client.WebSocketClient;
 import org.java_websocket.handshake.ServerHandshake;
+import dev.onvoid.webrtc.media.video.VideoTrack;
 
 import java.net.URI;
 import java.net.URISyntaxException;
 
 import java.util.ArrayList;
 import java.util.List;
-
+import javafx.scene.media.*;
 public class WebRTCHandler {
     private PeerConnectionFactory factory;
     private RTCPeerConnection peerConnection;
@@ -51,6 +52,9 @@ public class WebRTCHandler {
     private WebSocketClient webSocketClient;
     private MediaStreamTrack mediaStreamTrack;
     private VideoDeviceSource videoDeviceSource;
+
+    private VideoCapture videoCapture;
+
 
     //Subclasss that extends the  VideoDevice and provides a public constructor
     public class CustomVideoDevice extends VideoDevice {
@@ -104,8 +108,19 @@ public class WebRTCHandler {
             public void onSignalingChange(RTCSignalingState state) {
                 System.out.println("Signaling state changed to: " + state);
             }
+            @Override
+            public void onTrack(RTCRtpTransceiver transceiver) {
+                if (transceiver.getReceiver().getTrack() instanceof VideoTrack) {
+                    VideoTrack remoteVideoTrack = (VideoTrack) transceiver.getReceiver().getTrack();
+                    System.out.println("Received remote video track on Client B.");
+
+                    // Display the remote video on Client B
+                    displayRemoteVideo(remoteVideoTrack);
+                }
+            }
         });
     }
+
 
     private void setupWebSocket() {
         try {
@@ -130,6 +145,7 @@ public class WebRTCHandler {
                 public void onError(Exception e) {
                     e.printStackTrace();
                 }
+
             };
             webSocketClient.connect();
         } catch (URISyntaxException e) {
@@ -140,14 +156,24 @@ public class WebRTCHandler {
     public void setupLocalMedia() {
 
         videoDeviceSource = new VideoDeviceSource();
-        CustomVideoDevice videoDevice = new CustomVideoDevice("UVC Camera (046d:0825)", "/dev/video0");
+        CustomVideoDevice videoDevice = new CustomVideoDevice("Logitech Webcam C925e" , "USB/VID_046D&PID_085B&MI_00/7&81338CB&2&0000");
         VideoCaptureCapability capability = new VideoCaptureCapability(640, 480, 30);
+
+        videoCapture = new VideoCapture();
+        videoCapture.setVideoCaptureDevice(videoDevice);
+        videoCapture.setVideoCaptureCapability(capability);
+
+
         videoDeviceSource.setVideoCaptureDevice(videoDevice);
         videoDeviceSource.setVideoCaptureCapability(capability);
 
         mediaStreamTrack = factory.createVideoTrack("video_track", videoDeviceSource);
 
         peerConnection.addTrack(mediaStreamTrack, List.of(mediaStreamTrack.getId()));
+
+        try{videoDeviceSource.start();}catch(Exception e){e.getMessage();}
+
+
         System.out.println("Local media setup completed");
     }
 

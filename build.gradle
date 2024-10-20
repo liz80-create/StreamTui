@@ -34,6 +34,8 @@
 plugins {
     id 'java'
     id 'application'
+    id 'org.openjfx.javafxplugin' version '0.1.0'
+
 }
 //
 //application {
@@ -42,7 +44,10 @@ plugins {
 
 group = 'org.example'
 version = '1.0-SNAPSHOT'
-
+javafx {
+    version = "21"
+    modules = [ 'javafx.controls', 'javafx.fxml', 'javafx.media' ]
+}
 
 
 
@@ -67,6 +72,7 @@ dependencies {
     implementation group: "dev.onvoid.webrtc", name: "webrtc-java", version: "0.8.0", classifier: "linux-x86_64"
     implementation group: "dev.onvoid.webrtc", name: "webrtc-java", version: "0.8.0", classifier: "windows-x86_64"
     implementation 'org.slf4j:slf4j-log4j12:1.7.29'
+    implementation 'org.openjfx:javafx-media:19.0.2'
 }
 
 application {
